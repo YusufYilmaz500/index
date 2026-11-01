@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Antrenman Defteri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9EDF1; --surface:#FFFFFF; --sunk:#DDE3EA; --ink:#18202B; --muted:#5E6978;
+  --line:#C9D1DB; --accent:#2B45D4; --accent-ink:#FFFFFF; --good:#1F7A4D; --warn:#A35A00; --bad:#B3261E;
+  color-scheme: light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12161D; --surface:#1C222C; --sunk:#262E3A; --ink:#E7EBF1; --muted:#9AA5B4;
+    --line:#333D4B; --accent:#8496FF; --accent-ink:#0E1220; --good:#5FCB93; --warn:#F0A94B; --bad:#FF8A80;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12161D; --surface:#1C222C; --sunk:#262E3A; --ink:#E7EBF1; --muted:#9AA5B4;
+  --line:#333D4B; --accent:#8496FF; --accent-ink:#0E1220; --good:#5FCB93; --warn:#F0A94B; --bad:#FF8A80;
+  color-scheme: dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+h1,h2,h3{font-stretch:72%;font-weight:800;line-height:1.05;margin:0;letter-spacing:-.01em}
+h1{font-size:2.1rem}
+h2{font-size:1.6rem;margin-bottom:.6rem}
+h3{font-size:1.2rem}
+p{margin:.4rem 0}
+.wrap{max-width:680px;margin:0 auto;padding:1.25rem 1rem 6.5rem}
+header.top{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin-bottom:1.25rem}
+.status{font-size:.8rem;color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:.875rem}
+section.block{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1rem;margin-bottom:1rem}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:.7rem 1.1rem;font-weight:700}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--line)}
+.btn.tiny{padding:.3rem .6rem;font-size:.8rem;font-weight:600}
+.btn:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+input[type=number],input[type=date]{font:inherit;color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:.5rem .6rem;width:100%;min-width:0}
+input::placeholder{color:var(--muted);opacity:.8}
+label.f{display:block;font-size:.8rem;color:var(--muted);margin-bottom:.2rem}
+
+/* day picker: the memorable element */
+.days{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1rem}
+.day{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:.6rem .4rem .7rem;text-align:center;color:var(--ink)}
+.day b{display:block;font-size:4.2rem;line-height:.95;font-stretch:62%;font-weight:900}
+.day span{font-size:.78rem;color:var(--muted)}
+.day[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.day[aria-pressed="true"] span{color:var(--accent-ink);opacity:.85}
+.next-tag{display:inline-block;margin-top:.2rem;font-size:.7rem;font-weight:700;padding:.05rem .45rem;border-radius:99px;background:var(--sunk);color:var(--ink)}
+.day[aria-pressed="true"] .next-tag{background:var(--accent-ink);color:var(--accent)}
+
+.ex{border-top:1px solid var(--line);padding:.9rem 0}
+.ex:first-of-type{border-top:0;padding-top:.2rem}
+.ex-head{display:flex;justify-content:space-between;gap:.75rem;align-items:baseline}
+.ex-name{font-weight:700}
+.ex-target{font-size:.85rem;color:var(--muted);white-space:nowrap}
+.last{font-size:.82rem;color:var(--muted);margin:.15rem 0 .5rem}
+.hint{font-size:.82rem;font-weight:700;color:var(--good)}
+.sets{display:grid;grid-template-columns:2rem 1fr 1fr;gap:.4rem .5rem;align-items:center}
+.sets .n{font-size:.8rem;color:var(--muted);text-align:center}
+.sets .hdr{font-size:.72rem;color:var(--muted)}
+.save-row{display:flex;gap:.6rem;align-items:center;margin-top:.5rem;flex-wrap:wrap}
+
+.hist{list-style:none;margin:0;padding:0}
+.hist li{border-top:1px solid var(--line);padding:.6rem 0}
+.hist li:first-child{border-top:0}
+.hist summary{cursor:pointer;display:flex;justify-content:space-between;gap:.5rem}
+.hist .detail{font-size:.85rem;color:var(--muted);margin:.4rem 0}
+
+.row2{display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;align-items:end}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin:.8rem 0}
+.stat{background:var(--sunk);border-radius:10px;padding:.6rem}
+.stat .v{font-size:1.4rem;font-weight:800;font-stretch:75%}
+.stat .l{font-size:.72rem;color:var(--muted)}
+.verdict{border-left:4px solid var(--accent);padding:.6rem .8rem;background:var(--sunk);border-radius:0 10px 10px 0}
+.verdict.good{border-color:var(--good)} .verdict.warn{border-color:var(--warn)} .verdict.bad{border-color:var(--bad)}
+.chart{overflow-x:auto}
+.chart svg{display:block;width:100%;height:auto}
+.entries{list-style:none;padding:0;margin:.5rem 0 0;max-height:240px;overflow:auto}
+.entries li{display:flex;justify-content:space-between;align-items:center;padding:.35rem 0;border-top:1px solid var(--line);font-size:.9rem}
+
+.plan-day{margin-bottom:1rem}
+.plan-day ol{margin:.4rem 0 0;padding-left:1.3rem}
+.plan-day li{margin:.15rem 0}
+ul.tight{margin:.3rem 0;padding-left:1.2rem}
+ul.tight li{margin:.2rem 0}
+details.note{border-top:1px solid var(--line);padding:.7rem 0}
+details.note:first-of-type{border-top:0}
+details.note summary{cursor:pointer;font-weight:700;font-stretch:80%;font-size:1.1rem}
+.warnbox{font-size:.88rem;background:var(--sunk);border-radius:10px;padding:.6rem .8rem;margin-top:.5rem}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);z-index:20}
+nav.tabs a{flex:1;max-width:170px;text-align:center;padding:.75rem .25rem;color:var(--muted);text-decoration:none;font-weight:700;font-size:.9rem;font-stretch:85%}
+nav.tabs a[aria-current="page"]{color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
+.toast{position:fixed;left:50%;bottom:calc(5rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:.55rem 1rem;border-radius:99px;font-size:.9rem;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion: reduce){.toast{transition:none}}
+@media (max-width:380px){.day b{font-size:3.4rem}.stats{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Antrenman Defteri</h1>
+    <span class="status" id="status">Yükleniyor…</span>
+  </header>
+  <main id="view"></main>
+</div>
+<nav class="tabs" aria-label="Bölümler">
+  <a href="#antrenman" data-v="antrenman">Antrenman</a>
+  <a href="#olcum" data-v="olcum">Ölçüm</a>
+  <a href="#program" data-v="program">Program</a>
+  <a href="#notlar" data-v="notlar">Notlar</a>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ---------- Program data ---------- */
+const PROGRAM = {
+  A:{title:"Gün A", ex:[
+    {id:"smith_bench",n:"Smith Machine Bench Press",s:3,lo:6,hi:10},
+    {id:"lat_pd",n:"Lat Pulldown",s:3,lo:8,hi:12},
+    {id:"db_sp",n:"Seated Dumbbell Shoulder Press",s:2,lo:8,hi:12},
+    {id:"cable_lat",n:"Cable Lateral Raise",s:3,lo:12,hi:15},
+    {id:"bb_curl",n:"Barbell Curl",s:2,lo:8,hi:12},
+    {id:"pushdown",n:"Triceps Pushdown",s:2,lo:10,hi:15}]},
+  B:{title:"Gün B", ex:[
+    {id:"pullup",n:"Pull-Up",s:3,lo:6,hi:10,bw:true},
+    {id:"machine_chest",n:"Machine Chest Press",s:3,lo:8,hi:12},
+    {id:"cs_row",n:"Chest-Supported Dumbbell Row",s:3,lo:8,hi:12},
+    {id:"db_lat",n:"Dumbbell Lateral Raise",s:3,lo:12,hi:20},
+    {id:"bb_shrug",n:"Barbell Shrug",s:2,lo:8,hi:12},
+    {id:"oh_ext",n:"Overhead Dumbbell Triceps Extension",s:2,lo:10,hi:12},
+    {id:"hammer",n:"Hammer Curl",s:2,lo:10,hi:12}]},
+  C:{title:"Gün C", ex:[
+    {id:"smith_ohp",n:"Smith Machine Overhead Shoulder Press",s:3,lo:6,hi:10},
+    {id:"machine_row",n:"Machine Row",s:3,lo:8,hi:12},
+    {id:"smith_bench_c",n:"Smith Machine Bench Press (hafif)",s:3,lo:10,hi:12},
+    {id:"lat_machine",n:"Lat Pulldown Machine",s:2,lo:10,hi:12},
+    {id:"cable_lat_c",n:"Cable Lateral Raise",s:3,lo:12,hi:15},
+    {id:"db_shrug",n:"Dumbbell Shrug",s:2,lo:10,hi:12},
+    {id:"db_curl",n:"Standing Dumbbell Biceps Curl",s:2,lo:10,hi:12},
+    {id:"pushdown_c",n:"Triceps Pushdown",s:2,lo:12,hi:15}]}
+};
+const ORDER=["A","B","C"];
+
+/* ---------- State & storage ---------- */
+let state={sessions:[],weights:[],waists:[]};
+let mode="loading", docRef=null, saving=false, pending=false;
+let selDay=null, draft={};
+
+const $=s=>document.querySelector(s);
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const fmtDate=s=>{const [y,m,d]=s.split("-");return d+"."+m+"."+y};
+const num=v=>{const x=parseFloat(String(v).replace(",","."));return isFinite(x)?x:null};
+const fmt=(x,d=1)=>x==null?"–":(Math.round(x*10**d)/10**d).toLocaleString("tr-TR");
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove("show"),1800)}
+function setStatus(){
+  $("#status").textContent = mode==="db" ? "Hesabına kaydediliyor" : mode==="local" ? "Sadece bu cihazda kayıtlı" : "Yükleniyor…";
+}
+function clean(o){return {sessions:Array.isArray(o.sessions)?o.sessions:[],weights:Array.isArray(o.weights)?o.weights:[],waists:Array.isArray(o.waists)?o.waists:[]}}
+
+function loadLocal(){try{const r=localStorage.getItem("ad_state");if(r)state=clean(JSON.parse(r))}catch(e){}}
+function saveLocal(){try{localStorage.setItem("ad_state",JSON.stringify(state))}catch(e){}}
+function loadDraft(){try{const r=localStorage.getItem("ad_draft");if(r)draft=JSON.parse(r)||{}}catch(e){draft={}}}
+function saveDraft(){try{localStorage.setItem("ad_draft",JSON.stringify(draft))}catch(e){}}
+
+function persist(){
+  if(mode==="db"&&docRef){
+    if(saving){pending=true;return}
+    saving=true;
+    docRef.set({sessions:state.sessions,weights:state.weights,waists:state.waists,v:1})
+      .catch(()=>{toast("Kaydedilemedi, cihazda tutuluyor");mode="local";setStatus();saveLocal()})
+      .finally(()=>{saving=false;if(pending){pending=false;persist()}});
+  } else saveLocal();
+}
+
+async function initStore(){
+  loadDraft();
+  const fallback=()=>{mode="local";loadLocal();setStatus();render()};
+  try{
+    if(!window.claude||!window.claude.use){fallback();return}
+    const timeout=new Promise(r=>setTimeout(()=>r(null),10000));
+    const db=await Promise.race([window.claude.use("db"),timeout]);
+    const user=db?await Promise.race([window.claude.use("user"),timeout]):null;
+    const id=user?await user.id():null;
+    if(!db||!id){fallback();return}
+    docRef=db.doc("data/users/"+id+"/state");
+    const snap=await Promise.race([docRef.get(),timeout]);
+    if(!snap){fallback();return}
+    if(snap.exists) state=clean(snap.data()||{});
+    mode="db";setStatus();render();
+  }catch(e){fallback()}
+}
+
+/* ---------- Helpers ---------- */
+function lastSessionFor(exId,beforeIdx){
+  const ss=[...state.sessions].sort((a,b)=>a.date<b.date?1:-1);
+  for(const s of ss){if(s.ex&&s.ex[exId]&&s.ex[exId].length)return s}
+  return null;
+}
+function nextDay(){
+  if(!state.sessions.length)return "A";
+  const last=[...state.sessions].sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(a.t<b.t?1:-1))[0];
+  return ORDER[(ORDER.indexOf(last.day)+1)%3];
+}
+function weekKey(ds){const d=new Date(ds+"T12:00:00");const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);return d.toISOString().slice(0,10)}
+function weeklyAvg(){
+  const m={};for(const w of state.weights){const k=weekKey(w.date);(m[k]=m[k]||[]).push(w.kg)}
+  return Object.keys(m).sort().map(k=>({week:k,avg:m[k].reduce((a,b)=>a+b,0)/m[k].length,n:m[k].length}));
+}
+function daysBetween(a,b){return Math.round((new Date(b+"T12:00:00")-new Date(a+"T12:00:00"))/864e5)}
+
+/* ---------- Views ---------- */
+function render(){
+  const v=(location.hash||"#antrenman").slice(1);
+  const view=["antrenman","olcum","program","notlar"].includes(v)?v:"antrenman";
+  document.querySelectorAll("nav.tabs a").forEach(a=>{if(a.dataset.v===view)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
+  ({antrenman:vAntrenman,olcum:vOlcum,program:vProgram,notlar:vNotlar})[view]();
+}
+
+function vAntrenman(){
+  const nd=nextDay();
+  if(!selDay)selDay=nd;
+  const P=PROGRAM[selDay];
+  const d=draft[selDay]||{};
+  let h=`<div class="days" role="group" aria-label="Gün seç">`;
+  for(const k of ORDER){
+    h+=`<button class="day" data-day="${k}" aria-pressed="${k===selDay}"><b>${k}</b><span>${PROGRAM[k].ex.length} hareket</span>${k===nd?`<br><span class="next-tag">Sıradaki</span>`:""}</button>`;
+  }
+  h+=`</div><section class="block"><h2>${P.title}</h2><p class="small muted">Her seti tükenişe 1–2 tekrar kala bitir. Boş bıraktığın setler kaydedilmez.</p>`;
+  for(const e of P.ex){
+    const ls=lastSessionFor(e.id);
+    const last=ls?ls.ex[e.id]:null;
+    let lastTxt="İlk kez yapıyorsun";
+    let hint="";
+    if(last){
+      lastTxt=`Son (${fmtDate(ls.date)}): `+last.map(s=>`${fmt(s.kg)}${e.bw?" ek":""} kg × ${s.r}`).join(", ");
+      if(last.length>=e.s&&last.every(s=>s.r>=e.hi))hint=`<div class="hint">Tüm setlerde ${e.hi} tekrara ulaştın: ağırlığı artır.</div>`;
+    }
+    h+=`<div class="ex"><div class="ex-head"><span class="ex-name">${e.n}</span><span class="ex-target">${e.s} × ${e.lo}–${e.hi}</span></div><div class="last">${lastTxt}</div>${hint}<div class="sets"><span></span><span class="hdr">${e.bw?"Ek ağırlık (kg)":"Ağırlık (kg)"}</span><span class="hdr">Tekrar</span>`;
+    for(let i=0;i<e.s;i++){
+      const dv=(d[e.id]&&d[e.id][i])||{};
+      const ph=last&&last[i]?last[i]:null;
+      h+=`<span class="n">${i+1}</span><input type="number" inputmode="decimal" step="0.5" min="0" aria-label="${e.n} set ${i+1} ağırlık" data-ex="${e.id}" data-i="${i}" data-k="kg" value="${dv.kg??""}" placeholder="${ph?fmt(ph.kg):""}"><input type="number" inputmode="numeric" step="1" min="0" aria-label="${e.n} set ${i+1} tekrar" data-ex="${e.id}" data-i="${i}" data-k="r" value="${dv.r??""}" placeholder="${ph?ph.r:""}">`;
+    }
+    h+=`</div></div>`;
+  }
+  h+=`<div class="save-row"><button class="btn" id="saveSession">Antrenmanı kaydet</button><button class="btn ghost" id="fillLast">Son değerleri doldur</button></div></section>`;
+
+  const hist=[...state.sessions].sort((a,b)=>a.date<b.date?1:-1).slice(0,15);
+  h+=`<section class="block"><h2>Geçmiş</h2>`;
+  if(!hist.length)h+=`<p class="muted">Henüz kayıt yok. İlk antrenmanını kaydettiğinde burada görünecek.</p>`;
+  else{
+    h+=`<ul class="hist">`;
+    for(const s of hist){
+      const P2=PROGRAM[s.day];
+      const lines=P2.ex.filter(e=>s.ex[e.id]).map(e=>`${e.n}: ${s.ex[e.id].map(x=>`${fmt(x.kg)}×${x.r}`).join(", ")}`).join("<br>");
+      h+=`<li><details><summary><span><b>Gün ${s.day}</b> <span class="muted">${fmtDate(s.date)}</span></span><span class="muted small">${Object.keys(s.ex).length} hareket</span></summary><div class="detail">${lines}</div><button class="btn ghost tiny" data-del-session="${s.id}">Bu kaydı sil</button></details></li>`;
+    }
+    h+=`</ul>`;
+  }
+  h+=`</section>`;
+  $("#view").innerHTML=h;
+
+  document.querySelectorAll(".day").forEach(b=>b.onclick=()=>{selDay=b.dataset.day;render()});
+  document.querySelectorAll(".sets input").forEach(inp=>inp.oninput=()=>{
+    const {ex,i,k}=inp.dataset;draft[selDay]=draft[selDay]||{};draft[selDay][ex]=draft[selDay][ex]||[];
+    draft[selDay][ex][i]=draft[selDay][ex][i]||{};draft[selDay][ex][i][k]=inp.value;saveDraft();
+  });
+  $("#fillLast").onclick=()=>{
+    draft[selDay]={};
+    for(const e of P.ex){const ls=lastSessionFor(e.id);if(ls){draft[selDay][e.id]=ls.ex[e.id].map(s=>({kg:String(s.kg),r:String(s.r)}))}}
+    saveDraft();render();toast("Son değerler dolduruldu");
+  };
+  $("#saveSession").onclick=()=>{
+    const dd=draft[selDay]||{};const ex={};
+    for(const e of P.ex){
+      const sets=(dd[e.id]||[]).map(s=>s?{kg:num(s.kg),r:num(s.r)}:null).filter(s=>s&&s.r!=null&&s.r>0).map(s=>({kg:s.kg??0,r:Math.round(s.r)}));
+      if(sets.length)ex[e.id]=sets;
+    }
+    if(!Object.keys(ex).length){toast("Önce en az bir setin tekrarını gir");return}
+    state.sessions.push({id:uid(),date:today(),day:selDay,t:Date.now(),ex});
+    delete draft[selDay];saveDraft();persist();selDay=null;render();toast("Antrenman kaydedildi");
+    window.scrollTo({top:0});
+  };
+  document.querySelectorAll("[data-del-session]").forEach(b=>b.onclick=()=>{
+    if(!confirm("Bu antrenman kaydı silinsin mi?"))return;
+    state.sessions=state.sessions.filter(s=>s.id!==b.dataset.delSession);persist();render();toast("Kayıt silindi");
+  });
+}
+
+function evaluate(){
+  const wk=weeklyAvg();
+  const allDates=[...state.weights.map(w=>w.date),...state.waists.map(w=>w.date),...state.sessions.map(s=>s.date)].sort();
+  if(!allDates.length||daysBetween(allDates[0],today())<21) return {cls:"",t:"Değerlendirme için en az 3 haftalık kayıt gerekli. Şimdilik ölçmeye ve antrenmanları kaydetmeye devam et."};
+  // waist trend
+  const ws=[...state.waists].sort((a,b)=>a.date<b.date?-1:1);
+  let waistDelta=null;
+  if(ws.length>=2){const last=ws[ws.length-1];const old=[...ws].reverse().find(w=>daysBetween(w.date,last.date)>=21)||ws[0];if(old!==last)waistDelta=last.cm-old.cm}
+  // lift trend
+  let up=0,down=0;
+  const ids=new Set();state.sessions.forEach(s=>Object.keys(s.ex).forEach(k=>ids.add(k)));
+  const ss=[...state.sessions].sort((a,b)=>a.date<b.date?-1:1);
+  ids.forEach(id=>{
+    const hits=ss.filter(s=>s.ex[id]);if(hits.length<2)return;
+    const last=hits[hits.length-1];const old=[...hits].reverse().find(s=>daysBetween(s.date,last.date)>=21);if(!old)return;
+    const score=s=>Math.max(...s.ex[id].map(x=>(x.kg||0)*(1+x.r/30)));
+    const a=score(old),b=score(last);if(b>a*1.01)up++;else if(b<a*0.99)down++;
+  });
+  if(down>up) return {cls:"bad",t:"Ağırlıklar düşüyor. Açık fazla gelmiş olabilir: kardiyoyu kısalt ya da biraz daha fazla ye."};
+  if(waistDelta==null) return {cls:"",t:"Bel ölçüsü için en az iki kayıt (aralarında 3+ hafta) gerekli. Haftada bir ölç."};
+  if(waistDelta<=-0.5) return {cls:"good",t:`Bel ${fmt(Math.abs(waistDelta))} cm inceldi${up?", ağırlıklar artıyor":""}. Recomp çalışıyor: hiçbir şeyi değiştirme.`};
+  return {cls:"warn",t:"Bel değişmiyor. Açığı 100–150 kcal artır ya da kardiyoya 10 dk ekle."};
+}
+
+function chartSVG(){
+  const wk=weeklyAvg().slice(-16);
+  if(wk.length<2)return `<p class="small muted">Grafik için en az iki haftalık kilo kaydı gerekli.</p>`;
+  const W=600,H=200,p=32;
+  const vals=wk.map(w=>w.avg);let mn=Math.min(...vals),mx=Math.max(...vals);if(mx-mn<1){mn-=0.5;mx+=0.5}
+  const x=i=>p+i*(W-2*p)/(wk.length-1), y=v=>H-p-(v-mn)*(H-2*p)/(mx-mn);
+  const pts=wk.map((w,i)=>`${x(i).toFixed(1)},${y(w.avg).toFixed(1)}`).join(" ");
+  let g=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Haftalık ortalama kilo grafiği">`;
+  [mn,(mn+mx)/2,mx].forEach(v=>{g+=`<line x1="${p}" x2="${W-p}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="2" y="${y(v)+4}" font-size="11" fill="var(--muted)">${fmt(v)}</text>`});
+  g+=`<polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
+  wk.forEach((w,i)=>{g+=`<circle cx="${x(i)}" cy="${y(w.avg)}" r="4" fill="var(--accent)"/>`});
+  g+=`<text x="${p}" y="${H-8}" font-size="11" fill="var(--muted)">${fmtDate(wk[0].week)}</text><text x="${W-p}" y="${H-8}" font-size="11" fill="var(--muted)" text-anchor="end">${fmtDate(wk[wk.length-1].week)}</text></svg>`;
+  return g;
+}
+
+function vOlcum(){
+  const wk=weeklyAvg();
+  const cur=wk.length?wk[wk.length-1]:null, prev=wk.length>1?wk[wk.length-2]:null;
+  const ws=[...state.waists].sort((a,b)=>a.date<b.date?-1:1);
+  const lastW=ws.length?ws[ws.length-1]:null;
+  const ev=evaluate();
+  let h=`<section class="block"><h2>Değerlendirme</h2><div class="verdict ${ev.cls}">${ev.t}</div><p class="small muted">3–4 haftada bir buraya bak. Tek bir tartıya değil, eğilime göre karar ver.</p></section>`;
+
+  h+=`<section class="block"><h2>Kilo</h2><p class="small muted">Haftada 3–4 sabah, tuvaletten sonra ve aç karnına tartıl.</p>
+  <div class="row2"><div><label class="f" for="wDate">Tarih</label><input type="date" id="wDate" value="${today()}"></div><div><label class="f" for="wKg">Kilo (kg)</label><input type="number" id="wKg" inputmode="decimal" step="0.1" min="20"></div><button class="btn" id="addW">Ekle</button></div>
+  <div class="stats"><div class="stat"><div class="v">${cur?fmt(cur.avg):"–"}</div><div class="l">Bu hafta ort.</div></div><div class="stat"><div class="v">${prev?fmt(prev.avg):"–"}</div><div class="l">Geçen hafta ort.</div></div><div class="stat"><div class="v">${cur&&prev?(cur.avg-prev.avg>0?"+":"")+fmt(cur.avg-prev.avg):"–"}</div><div class="l">Fark (kg)</div></div></div>
+  <div class="chart">${chartSVG()}</div>
+  <ul class="entries">${[...state.weights].sort((a,b)=>a.date<b.date?1:-1).map(w=>`<li><span>${fmtDate(w.date)}: <b>${fmt(w.kg)} kg</b></span><button class="btn ghost tiny" data-del-w="${w.id}">Sil</button></li>`).join("")}</ul></section>`;
+
+  h+=`<section class="block"><h2>Bel ölçüsü</h2><p class="small muted">Haftada bir, sabah, göbek hizasından mezura ile ölç. Kilo sabitken bel inceliyorsa recomp çalışıyor.</p>
+  <div class="row2"><div><label class="f" for="bDate">Tarih</label><input type="date" id="bDate" value="${today()}"></div><div><label class="f" for="bCm">Bel (cm)</label><input type="number" id="bCm" inputmode="decimal" step="0.1" min="30"></div><button class="btn" id="addB">Ekle</button></div>
+  <div class="stats"><div class="stat"><div class="v">${lastW?fmt(lastW.cm):"–"}</div><div class="l">Son ölçüm</div></div><div class="stat"><div class="v">${ws.length?fmt(ws[0].cm):"–"}</div><div class="l">İlk ölçüm</div></div><div class="stat"><div class="v">${ws.length>1?(lastW.cm-ws[0].cm>0?"+":"")+fmt(lastW.cm-ws[0].cm):"–"}</div><div class="l">Toplam fark (cm)</div></div></div>
+  <ul class="entries">${[...ws].reverse().map(w=>`<li><span>${fmtDate(w.date)}: <b>${fmt(w.cm)} cm</b></span><button class="btn ghost tiny" data-del-b="${w.id}">Sil</button></li>`).join("")}</ul></section>`;
+  $("#view").innerHTML=h;
+
+  $("#addW").onclick=()=>{const kg=num($("#wKg").value),d=$("#wDate").value;if(!kg||!d){toast("Tarih ve kiloyu gir");return}state.weights.push({id:uid(),date:d,kg});persist();render();toast("Kilo eklendi")};
+  $("#addB").onclick=()=>{const cm=num($("#bCm").value),d=$("#bDate").value;if(!cm||!d){toast("Tarih ve bel ölçüsünü gir");return}state.waists.push({id:uid(),date:d,cm});persist();render();toast("Bel ölçüsü eklendi")};
+  document.querySelectorAll("[data-del-w]").forEach(b=>b.onclick=()=>{state.weights=state.weights.filter(w=>w.id!==b.dataset.delW);persist();render()});
+  document.querySelectorAll("[data-del-b]").forEach(b=>b.onclick=()=>{state.waists=state.waists.filter(w=>w.id!==b.dataset.delB);persist();render()});
+}
+
+function vProgram(){
+  let h=`<section class="block"><h2>3 günlük üst vücut programı</h2><p class="small muted">Pazartesi, Çarşamba, Cuma gibi aralarda en az 1 gün dinlenme. Her kas haftada 3 kez çalışıyor.</p>`;
+  for(const k of ORDER){
+    h+=`<div class="plan-day"><h3>${PROGRAM[k].title}</h3><ol>${PROGRAM[k].ex.map(e=>`<li>${e.n}: <span class="muted">${e.s} × ${e.lo}–${e.hi}</span></li>`).join("")}</ol></div>`;
+  }
+  h+=`</section>
+  <section class="block"><h2>Uygulama kuralları</h2><ul class="tight">
+  <li><b>Efor:</b> Her seti tükenişe 1–2 tekrar kala bitir. Son set tükenişe kadar gidebilir.</li>
+  <li><b>Çift progresyon:</b> Tüm setlerde aralığın üst sınırına ulaşınca ağırlığı artır ve alt sınırdan yeniden başla.</li>
+  <li><b>Dinlenme:</b> Press, pull-up ve row hareketlerinde 2–3 dk, izolasyonda 1–1,5 dk.</li>
+  <li><b>Isınma:</b> İlk harekette 2 hafif set.</li>
+  <li><b>Kontrol:</b> Ağırlıklar artıyorsa doğru yoldasın. Sürekli ağrı var ve performans düşüyorsa setleri azalt.</li>
+  <li><b>Trapez alternatifi:</b> Gün B’deki barbell shrug yerine chest-supported bench'te Kelso shrug yapabilirsin.</li>
+  </ul></section>
+  <section class="block"><h2>Haftalık set dağılımı</h2><ul class="tight"><li>Sırt: 14</li><li>Göğüs: 9</li><li>Yan omuz: 9</li><li>Ön omuz: 7 (press hareketlerinden)</li><li>Biceps: 6</li><li>Triceps: 6</li><li>Trapez: 4</li></ul></section>
+  <section class="block"><h2>Kardiyo</h2><ul class="tight">
+  <li>Spor günlerinde ağırlıktan <b>sonra</b> 30–40 dk eğimli yürüyüş (eğim %8–12, hız 4,5–5,5 km/s). Yaklaşık 250–350 kcal.</li>
+  <li>Kalan farkı beslenmeden (günde −100–150 kcal) ya da diğer günlerde 15–20 dk yürüyüşle kapat.</li>
+  <li>Ağırlıkların düşerse kardiyoyu kısalt, açığı beslenmeden kapat.</li></ul></section>
+  <section class="block"><h2>Programa alınmayanlar</h2><ul class="tight">
+  <li><b>Behind-the-Neck Lat Pulldown:</b> Omuzu zorlayan pozisyon; normal lat pulldown aynı işi güvenli yapıyor.</li>
+  <li><b>Cable Front Raise:</b> Ön omuz press hareketlerinde zaten çalışıyor.</li>
+  <li><b>Machine Shoulder Press:</b> Diğer press’lerle aynı iş. Gün A’daki dumbbell press yerine kullanılabilir.</li></ul></section>`;
+  $("#view").innerHTML=h;
+}
+
+function vNotlar(){
+  $("#view").innerHTML=`
+  <section class="block"><h2>Akılda tutulacak 7 kural</h2><ol>
+  <li>Her kas grubunu haftada en az 2 kez çalış.</li>
+  <li>3 gün için full body, 4 gün için upper/lower.</li>
+  <li>Efor önce gelir. Ağırlıklar artıyorsa doğru yoldasın.</li>
+  <li>Sürekli kas ağrısı varsa muhtemelen fazla çalışıyorsun.</li>
+  <li>Yağ yakımı = kalori açığı. Ilımlı açık (~400 kcal) ve günlük 10k adım.</li>
+  <li>İştah yoksa sıvı kalori.</li>
+  <li>Peptit, ilaç ve kan değeri konularında önce doktor.</li></ol></section>
+
+  <section class="block"><h2>Soru-cevap özeti</h2>
+  <details class="note"><summary>Program ve frekans</summary><ul class="tight">
+  <li>Haftada 3 gün: full body × 3.</li><li>Haftada 4 gün: upper / lower / upper / lower.</li>
+  <li>Her kas grubu haftada en az 2 kez; haftada tek göğüs günü yeterli değil.</li></ul></details>
+  <details class="note"><summary>Efor, hacim, toparlanma</summary><ul class="tight">
+  <li>Efor >> hacim. Bir setin sayılması için tükenişe yakın yapılması gerekir.</li>
+  <li>Her antrenman sonrası ağrı: %80 fazla çalışıyorsun; ağırlıklar artıyorsa sorun yok.</li>
+  <li>Ağrı tek başına ölçüt değil, performans ölçüt.</li></ul></details>
+  <details class="note"><summary>Egzersiz seçimi</summary><ul class="tight">
+  <li>Trapez: snatch grip power shrug.</li><li>Orta sırt: Kelso shrug.</li><li>Kadınlarda sırt: lat pulldown ve pull up.</li></ul></details>
+  <details class="note"><summary>Yağ yakımı ve kalori</summary><ul class="tight">
+  <li>Harcanan kalori > alınan kalori → yağ yakımı. Şekerli beslenen biri de toplamda açıktaysa yağlanmaz.</li>
+  <li>~400 kcal açık çoğu kişi için sürdürülebilir.</li>
+  <li>Yeni başlayan için: günde 10.000 adım ve kalori açığı.</li>
+  <li>10.000 adım ortalama 300–500 kcal (kiloya ve tempoya göre).</li>
+  <li>Çok yüksek kiloda (ör. 18 yaş, 180 kg) doktor ve diyetisyen takibiyle başlamak en güvenlisi.</li></ul></details>
+  <details class="note"><summary>Kilo alma ve iştah</summary><ul class="tight">
+  <li>İlaç iştahı kesiyorsa sıvı kalorilere yönel (shake, smoothie, süt bazlı içecekler).</li>
+  <li>İştah kaybını ilacı yazan doktora da söyle.</li></ul></details>
+  <details class="note"><summary>Takviyeler</summary><ul class="tight">
+  <li><b>Kreatin:</b> Evet, günde 3–5 g. Saç dökülmesi bağlantısının kanıtı zayıf.</li>
+  <li><b>Ashwagandha:</b> Dönemsel evet, uzun vadeli hayır.</li>
+  <li><b>Whey:</b> Protein hedefini (1,6–2,2 g/kg) yemekle tamamlayamıyorsan.</li>
+  <li><b>D vitamini:</b> Kan değerin düşükse, doktor önerisiyle.</li></ul></details>
+  <details class="note"><summary>Peptitler ve ilaçlar</summary><ul class="tight">
+  <li>Hikâyelerde GHK-Cu, Reta, TB-500 ve BPC-157 olumlu anıldı.</li></ul>
+  <div class="warnbox">Retatrutide araştırma aşamasında reçeteli bir ilaç adayı. BPC-157 ve TB-500’ün insanlarda güvenlik ve etkinlik kanıtı çok sınırlı, onaylı ilaç değiller ve WADA yasaklı listesinde. Recomp için gerekli değiller; doktor kontrolü dışında kullanılmamalı.</div></details>
+  <details class="note"><summary>Sağlık ve kan değerleri</summary><ul class="tight">
+  <li>Ferritin çok düşükse (10–11): doktora danış. Ferinject reçeteli, damardan demir tedavisi; kararı doktor verir.</li>
+  <li>Testosteron referans değerleri genel olarak Avrupa ile aynı.</li></ul></details>
+  <details class="note"><summary>Cevapsız kalanlar</summary><ul class="tight">
+  <li>3 frekans 1 set mantıklı mı?</li><li>Antrenman sonrası karbonhidrat saçmalık mı?</li></ul></details>
+  </section>
+
+  <section class="block"><h2>Ölçüm sistemi</h2><ul class="tight">
+  <li><b>Tartı:</b> Haftada 3–4 sabah; haftalık ortalamaya bak.</li>
+  <li><b>Bel:</b> Haftada bir; en değerli recomp göstergesi.</li>
+  <li><b>Ağırlıklar:</b> Her seans kaydet.</li>
+  <li><b>3–4 haftada bir:</b> Bel inceliyor ve ağırlıklar artıyorsa değiştirme. Bel sabitse açığı 100–150 kcal artır. Ağırlıklar düşüyorsa açığı azalt.</li></ul></section>`;
+}
+
+window.addEventListener("hashchange",render);
+render();
+setStatus();
+initStore();
+</script>
+</body>
+</html>
